@@ -1,0 +1,7 @@
+build
+package
+*.pyc
+rabbitmq-c*
+conanbuildinfo.cmake
+conanbuildinfo.txt
+conaninfo.txt

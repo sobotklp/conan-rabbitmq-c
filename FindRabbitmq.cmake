@@ -1,0 +1,24 @@
+# Try to find libjson
+# Once done, this will define
+#
+# LIBRABBITMQ_FOUND        - system has LIBRABBITMQ
+# LIBRABBITMQ_INCLUDE_DIRS - LIBSJON include directories
+# LIBRABBITMQ_LIBRARIES    - libraries need to use GFLAGS
+
+find_path(
+        LIBRABBITMQ_INCLUDE_DIR
+        NAMES amqp.h
+        PATHS ${CONAN_INCLUDE_DIRS_LIBRABBITMQ}
+)
+
+find_library(
+        LIBRABBITMQ_LIBRARY
+        NAMES rabbitmq
+        PATHS ${CONAN_LIB_DIRS_LIBRABBITMQ}
+)
+
+set(LIBRABBITMQ_FOUND TRUE)
+set(LIBRABBITMQ_INCLUDE_DIRS ${LIBRABBITMQ_INCLUDE_DIR})
+set(LIBRABBITMQ_LIBRARIES ${LIBRABBITMQ_LIBRARY})
+
+mark_as_advanced(LIBRABBITMQ_LIBRARY LIBRABBITMQ_INCLUDE_DIR)
