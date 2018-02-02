@@ -7,12 +7,12 @@ if __name__ == "__main__":
 
     # The rabbitmq-c library cannot be built as a static library on Win32.
     if platform.system() == "Windows":
-        static_builds = []
+        shared_builds = []
         for settings, options, env_vars, build_requires in builder.builds:
-            if not ("rabbitmq-c:shared" in options and options["rabbitmq-c:shared"]):
-                static_builds.append([settings, options, env_vars, build_requires])
+            if options.get("rabbitmq-c:shared"):
+                shared_builds.append([settings, options, env_vars, build_requires])
 
-        builder.builds = static_builds
+        builder.builds = shared_builds
 
     builder.run()
 
