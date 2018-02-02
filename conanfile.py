@@ -10,7 +10,7 @@ class RabbitMQConan(ConanFile):
     options = {"shared": [True, False]}
     exports = "FindRabbitmq.cmake"
     default_options = "shared=True"
-    requires = ("OpenSSL/1.0.2k@lasote/stable", ("zlib/1.2.11@lasote/stable", "override"))
+    requires = ("OpenSSL/1.0.2n@conan/stable")
     generators = "cmake"
     unzipped_name = "rabbitmq-c-%s" % version
     zip_name = "%s.tar.gz" % unzipped_name
@@ -29,17 +29,14 @@ class RabbitMQConan(ConanFile):
         return self.unzipped_name
 
 
-    def configure(self):
-        # Turn off electric fence for openssl
-        # This has been removed in later versions of https://github.com/lasote/conan-openssl but it is still not uploaded to conan-transit.
-        self.options["OpenSSL"].no_electric_fence = True
-
     def build(self):
         cmake = CMake(self)
 
         # Use dependency version of openssl
         openssl_root_dir = self.deps_cpp_info["OpenSSL"].rootpath
         cmake.definitions['OPENSSL_ROOT_DIR'] = openssl_root_dir
+        cmake.definitions['BUILD_EXAMPLES'] = "OFF"  # Don't need to build examples
+        cmake.definitions['BUILD_TESTS'] = "OFF"  # Don't need to build tests
 
         # same as cmake.configure(source_folder=self.source_folder, build_folder=self.build_folder)
         if self.options.shared:
@@ -71,3 +68,6 @@ class RabbitMQConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = ["rabbitmq"]
+
+        if self.settings.os == "Linux":
+            self.cpp_info.libs.append("pthread")
