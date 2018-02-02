@@ -2,6 +2,8 @@
 
 [Conan.io](https://conan.io) package for [RabbitMQ C/C++ library](https://github.com/alanxz/rabbitmq-c)
 
+[![Build Status](https://travis-ci.org/sobotklp/conan-rabbitmq-c.svg?branch=master)](https://travis-ci.org/sobotklp/conan-rabbitmq-c)
+
 ## Build packages
 
 Download conan client from [Conan.io](https://conan.io) and run:
