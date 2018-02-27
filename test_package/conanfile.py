@@ -5,7 +5,7 @@ class RabbitMQTestConan(ConanFile):
     version = "0.1"
     settings = "os", "compiler", "build_type", "arch"
     generators = "cmake"
-    requires = "gtest/1.8.0@lasote/stable"
+    requires = "gtest/1.8.0@bincrafters/stable"
 
     def build(self):
         cmake = CMake(self)
