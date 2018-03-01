@@ -32,6 +32,11 @@ conan_basic_setup()""")
         # crypt32 lib under Windows etc. So we use conan-supplied settings
         tools.replace_in_file(librabbitmq_cmakelists, "OPENSSL_INCLUDE_DIR", "CONAN_INCLUDE_DIRS_OPENSSL")
         tools.replace_in_file(librabbitmq_cmakelists, "OPENSSL_LIBRARIES", "CONAN_LIBS_OPENSSL")
+        # Actually Win32 static lib can be build
+        tools.replace_in_file(root_cmakelists,
+                              """if (WIN32 AND BUILD_STATIC_LIBS)
+  message(FATAL_ERROR "The rabbitmq-c library cannot be built as a static library on Win32. Set BUILD_STATIC_LIBS=OFF to get around this.")
+endif()""", "")
 
 
     @property
@@ -76,6 +81,9 @@ conan_basic_setup()""")
 
     def package_info(self):
         if self.settings.os == "Windows":
-            self.cpp_info.libs = ["rabbitmq.4"]
+            if self.options.shared:
+                self.cpp_info.libs = ["rabbitmq.4"]
+            else:
+                self.cpp_info.libs = ["librabbitmq.4"]
         else:
             self.cpp_info.libs = ["rabbitmq"]
