@@ -22,6 +22,11 @@ class RabbitMQConan(ConanFile):
         tools.download(url, self.zip_name)
         tools.unzip(self.zip_name)
         os.unlink(self.zip_name)
+        root_cmakelists = os.path.join(self.unzipped_name, "CMakeLists.txt")
+        tools.replace_in_file(root_cmakelists, """project(rabbitmq-c "C")""",
+                              """project(rabbitmq-c "C")
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()""")
 
 
     @property
