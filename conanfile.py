@@ -7,13 +7,17 @@ class RabbitMQConan(ConanFile):
     license = "MIT"
     description = "This is a C-language AMQP client library for use with v2.0+ of the RabbitMQ broker."
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False]}
+    options = {"shared": [True, False], "fPIC": [True, False]}
     exports = "FindRabbitmqc.cmake"
-    default_options = "shared=True"
+    default_options = "shared=True", "fPIC=True"
     requires = ("OpenSSL/1.0.2n@conan/stable")
     generators = "cmake"
     unzipped_name = "rabbitmq-c-%s" % version
     zip_name = "%s.tar.gz" % unzipped_name
+
+    def config_options(self):
+        if self.settings.os == "Windows":
+            self.options.remove("fPIC")
 
     def source(self):
         url = "https://github.com/alanxz/rabbitmq-c/releases/download/v%s/%s" % (self.version, self.zip_name)
@@ -58,6 +62,8 @@ endif()""", "")
             cmake.definitions['BUILD_SHARED_LIBS'] = True
         else:
             cmake.definitions['BUILD_STATIC_LIBS'] = True
+        if self.settings.os != "Windows":
+            cmake.definitions["CMAKE_POSITION_INDEPENDENT_CODE"] = self.options.fPIC
         cmake.definitions["CMAKE_INSTALL_PREFIX"] = "install"
         cmake.configure(source_folder=self.subfolder)
 
