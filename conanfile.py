@@ -7,13 +7,17 @@ class RabbitMQConan(ConanFile):
     license = "MIT"
     description = "This is a C-language AMQP client library for use with v2.0+ of the RabbitMQ broker."
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False]}
-    exports = "FindRabbitmq.cmake"
-    default_options = "shared=True"
+    options = {"shared": [True, False], "fPIC": [True, False]}
+    exports = "FindRabbitmqc.cmake"
+    default_options = "shared=True", "fPIC=True"
     requires = ("OpenSSL/1.0.2n@conan/stable")
     generators = "cmake"
     unzipped_name = "rabbitmq-c-%s" % version
     zip_name = "%s.tar.gz" % unzipped_name
+
+    def config_options(self):
+        if self.settings.os == "Windows":
+            self.options.remove("fPIC")
 
     def source(self):
         url = "https://github.com/alanxz/rabbitmq-c/releases/download/v%s/%s" % (self.version, self.zip_name)
@@ -22,6 +26,21 @@ class RabbitMQConan(ConanFile):
         tools.download(url, self.zip_name)
         tools.unzip(self.zip_name)
         os.unlink(self.zip_name)
+        root_cmakelists = os.path.join(self.unzipped_name, "CMakeLists.txt")
+        librabbitmq_cmakelists = os.path.join(os.path.join(self.unzipped_name, "librabbitmq"), "CMakeLists.txt")
+        tools.replace_in_file(root_cmakelists, """project(rabbitmq-c "C")""",
+                              """project(rabbitmq-c "C")
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()""")
+        # CMake's find_package(OpenSSL) has numerous problems: it fails to add dl lib under Linux,
+        # crypt32 lib under Windows etc. So we use conan-supplied settings
+        tools.replace_in_file(librabbitmq_cmakelists, "OPENSSL_INCLUDE_DIR", "CONAN_INCLUDE_DIRS_OPENSSL")
+        tools.replace_in_file(librabbitmq_cmakelists, "OPENSSL_LIBRARIES", "CONAN_LIBS_OPENSSL")
+        # Actually Win32 static lib can be build
+        tools.replace_in_file(root_cmakelists,
+                              """if (WIN32 AND BUILD_STATIC_LIBS)
+  message(FATAL_ERROR "The rabbitmq-c library cannot be built as a static library on Win32. Set BUILD_STATIC_LIBS=OFF to get around this.")
+endif()""", "")
 
 
     @property
@@ -43,7 +62,10 @@ class RabbitMQConan(ConanFile):
             cmake.definitions['BUILD_SHARED_LIBS'] = True
         else:
             cmake.definitions['BUILD_STATIC_LIBS'] = True
-        cmake.configure(source_folder=self.subfolder, build_folder=self.subfolder)
+        if self.settings.os != "Windows":
+            cmake.definitions["CMAKE_POSITION_INDEPENDENT_CODE"] = self.options.fPIC
+        cmake.definitions["CMAKE_INSTALL_PREFIX"] = "install"
+        cmake.configure(source_folder=self.subfolder)
 
         cmake.build()
         #cmake.test()  # Build the "RUN_TESTS" or "test" target
@@ -52,26 +74,22 @@ class RabbitMQConan(ConanFile):
 
 
     def package(self):
-        self.copy("*.h", dst="include", src=self.subfolder)
-        self.copy("*.lib", dst="lib", keep_path=False)
-        self.copy("*.dll", dst="bin", keep_path=False)
-        self.copy("*.so*", dst="lib", keep_path=False)
-        self.copy("*.dylib", dst="lib", keep_path=False)
-        self.copy("*.a", dst="lib", keep_path=False)
+        self.copy("*.h", dst="include", src="install", keep_path=False)
+        self.copy("*.lib", dst="lib", src="install", keep_path=False)
+        self.copy("*.dll", dst="bin", src="install", keep_path=False)
+        self.copy("*.pdb", dst="bin", src="install", keep_path=False)
+        self.copy("*.so*", dst="lib", src="install", keep_path=False, symlinks=True)
+        self.copy("*.dylib", dst="lib", src="install", keep_path=False, symlinks=True)
+        self.copy("*.a", dst="lib", src="install", keep_path=False)
 
         # Copy cmake find_package script into project
-        self.copy("FindRabbitmq.cmake", ".", ".")
-
-        # Copying debug symbols
-        if self.settings.compiler == "Visual Studio" and self.options.include_pdbs:
-            self.copy(pattern="*.pdb", dst="lib", src=".", keep_path=False)
+        self.copy("FindRabbitmqc.cmake", ".", ".")
 
     def package_info(self):
-        self.cpp_info.libs = ["rabbitmq"]
-
-        if self.settings.os == "Linux":
-            self.cpp_info.libs.append("pthread")
-
-        elif self.settings.os == "Windows":
-            # Need to link with crypt32 as well for OpenSSL
-            self.cpp_info.libs.append("crypt32")
+        if self.settings.os == "Windows":
+            if self.options.shared:
+                self.cpp_info.libs = ["rabbitmq.4"]
+            else:
+                self.cpp_info.libs = ["librabbitmq.4"]
+        else:
+            self.cpp_info.libs = ["rabbitmq"]
