@@ -10,7 +10,7 @@ class RabbitMQConan(ConanFile):
     options = {"shared": [True, False], "fPIC": [True, False]}
     exports = "FindRabbitmqc.cmake"
     default_options = "shared=True", "fPIC=True"
-    requires = ("OpenSSL/1.0.2n@conan/stable")
+    requires = ("openssl/1.1.1h")
     generators = "cmake"
     unzipped_name = "rabbitmq-c-%s" % version
     zip_name = "%s.tar.gz" % unzipped_name
@@ -52,7 +52,7 @@ endif()""", "")
         cmake = CMake(self)
 
         # Use dependency version of openssl
-        openssl_root_dir = self.deps_cpp_info["OpenSSL"].rootpath
+        openssl_root_dir = self.deps_cpp_info["openssl"].rootpath
         cmake.definitions['OPENSSL_ROOT_DIR'] = openssl_root_dir
         cmake.definitions['BUILD_EXAMPLES'] = "OFF"  # Don't need to build examples
         cmake.definitions['BUILD_TESTS'] = "OFF"  # Don't need to build tests
