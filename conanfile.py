@@ -1,3 +1,4 @@
+import conans
 from conans import ConanFile, CMake, tools
 import os
 
@@ -20,7 +21,7 @@ class RabbitMQConan(ConanFile):
             self.options.remove("fPIC")
 
     def source(self):
-        url = "https://github.com/alanxz/rabbitmq-c/releases/download/v%s/%s" % (self.version, self.zip_name)
+        url = "https://github.com/alanxz/rabbitmq-c/archive/v%s.tar.gz" % (self.version)
         self.output.info("Downloading %s..." % url)
 
         tools.download(url, self.zip_name)
@@ -36,12 +37,15 @@ conan_basic_setup()""")
         # crypt32 lib under Windows etc. So we use conan-supplied settings
         tools.replace_in_file(librabbitmq_cmakelists, "OPENSSL_INCLUDE_DIR", "CONAN_INCLUDE_DIRS_OPENSSL")
         tools.replace_in_file(librabbitmq_cmakelists, "OPENSSL_LIBRARIES", "CONAN_LIBS_OPENSSL")
-        # Actually Win32 static lib can be build
-        tools.replace_in_file(root_cmakelists,
+        # Actually Win32 static lib can be built
+        try:
+            tools.replace_in_file(root_cmakelists,
                               """if (WIN32 AND BUILD_STATIC_LIBS)
   message(FATAL_ERROR "The rabbitmq-c library cannot be built as a static library on Win32. Set BUILD_STATIC_LIBS=OFF to get around this.")
 endif()""", "")
-
+        except conans.errors.ConanException:
+            # This pattern does not exist in later versions of rabbitmq-c
+            pass
 
     @property
     def subfolder(self):
