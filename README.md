@@ -10,6 +10,10 @@ Download conan client from [Conan.io](https://conan.io) and run:
 
     $ python build.py
 
+Or, alternatively with python3/pip3:
+
+    $ CONAN_PIP_COMMAND=pip3 CONAN_APPLE_CLANG_VERSIONS=11.0 python3 build.py
+
 ## Upload packages to server
 
     $ conan upload rabbitmq-c/0.6.0@sobotklp/stable --all
