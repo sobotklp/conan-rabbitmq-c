@@ -10,11 +10,12 @@ class RabbitMQConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False]}
     exports = "FindRabbitmqc.cmake"
-    default_options = "shared=True", "fPIC=True"
+    default_options = {"shared": False, "fPIC": True,}
     requires = ("openssl/1.1.1h")
     generators = "cmake"
     unzipped_name = "rabbitmq-c-%s" % version
     zip_name = "%s.tar.gz" % unzipped_name
+    topics = ("conan", "rabbitmq", )
 
     def config_options(self):
         if self.settings.os == "Windows":
